@@ -44,3 +44,36 @@ export async function DELETE(
     return NextResponse.json({ error: "Gagal memadam fail." }, { status: 500 });
   }
 }
+
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const { session_id, uploader_name, adminPassword } = body;
+
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+      return NextResponse.json({ error: "Tidak dibenarkan." }, { status: 401 });
+    }
+
+    const supabase = createServerSupabaseClient();
+    const updatePayload: { session_id?: string; uploader_name?: string | null } = {};
+    if (session_id) updatePayload.session_id = session_id;
+    if (uploader_name !== undefined) updatePayload.uploader_name = uploader_name ? uploader_name.trim() : null;
+
+    const { data, error } = await supabase
+      .from("media_items")
+      .update(updatePayload)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json(data);
+  } catch (err) {
+    console.error("[PUT /api/media/:id]", err);
+    return NextResponse.json({ error: "Gagal mengemaskini fail." }, { status: 500 });
+  }
+}

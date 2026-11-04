@@ -48,3 +48,36 @@ export async function DELETE(
     return NextResponse.json({ error: "Gagal memadam sesi." }, { status: 500 });
   }
 }
+
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const { title, date, adminPassword } = body;
+
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+      return NextResponse.json({ error: "Tidak dibenarkan." }, { status: 401 });
+    }
+
+    if (!title || !date) {
+      return NextResponse.json({ error: "Tajuk dan tarikh diperlukan." }, { status: 400 });
+    }
+
+    const supabase = createServerSupabaseClient();
+    const { data, error } = await supabase
+      .from("sessions")
+      .update({ title, date })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json(data);
+  } catch (err) {
+    console.error("[PUT /api/sessions/:id]", err);
+    return NextResponse.json({ error: "Gagal mengemaskini sesi." }, { status: 500 });
+  }
+}

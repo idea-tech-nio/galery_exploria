@@ -5,6 +5,7 @@ node_modules/
 .next/
 out/
 build/
+*.tsbuildinfo
 
 # environment variables & secrets (CRITICAL: NEVER COMMIT)
 .env
